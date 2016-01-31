@@ -12,9 +12,7 @@
     getMyFollowings() {
       if (this.auth.isLoggedIn()) {
         return this.http.get(`/api/users/my/followings`).success(result => result.data);
-      } else {
-        return null;
-      }
+      } // this if statement may need to be placed in the controller so it doesn't return an error in concole when logged off
     }
     checkIfFollower(campaign) {
       return this.getMyFollowings().then(data => { console.log(_.filter(data, val => {return val.campaign_id === campaign })) });

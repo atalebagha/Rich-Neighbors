@@ -1,6 +1,6 @@
 "use strict";
 
-(function () {
+(() => {
   class CampaignProfileController {
 
     constructor(
