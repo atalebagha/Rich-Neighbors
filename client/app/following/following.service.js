@@ -11,7 +11,9 @@
     }
     getMyFollowings() {
       if (this.auth.isLoggedIn()) {
-        return this.http.get(`/api/users/my/followings`).success(result => result.data)
+        return this.http.get(`/api/users/my/followings`).success(result => result.data);
+      } else {
+        return null;
       }
     }
     checkIfFollower(campaign) {
@@ -30,6 +32,9 @@
       }
     }
   }
+
+  followingFactory.$inject = ['$http', 'Auth'];
+
   angular.module('bApp')
     .service('followingFactory', followingFactory);
 })();

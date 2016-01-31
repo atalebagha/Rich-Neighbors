@@ -101,7 +101,6 @@ exports.index = function(req, res) {
       var offset = req.query.offset || 0;
       // get the max distance/radius or set it to 100 miles
       var maxDistance = req.query.distance || 100;
-      // we need to convert the distance to radians
       // convert miles to latitude/longitute radius
       maxDistance /= 69;
       // get coordinates [ <longitude> , <latitude> ]
@@ -121,10 +120,9 @@ exports.index = function(req, res) {
         };
 
       }
-      console.log(data);
       Campaign.find(data)
-      .limit(limit)
       .skip(offset)
+      .limit(limit)
       .execAsync()
       .then(responseWithResult(res))
       .catch(handleError(res));

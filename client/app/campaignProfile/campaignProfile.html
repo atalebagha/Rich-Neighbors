@@ -70,7 +70,7 @@
       </div>
       <div class="callout-card-content">
         <h3 class="lead"> Supplies</h3>
-        <div ng-repeat="x in cpCtrl.items">
+        <div ng-repeat="x in cpCtrl.campaign.items">
           <li><a href="#" ng-click="showDetails = ! showDetails">{{x.name}}: {{x.quantity}} </a>
             <p>{{cpCtrl.filterSupply(cpCtrl.contributors, x._id ) || 0}}  donated</p>
             <div ng-show="showDetails">
@@ -96,7 +96,7 @@
       </div>
       <div class="callout-card-content">
         <h3 class="lead">Volunteers</h3>
-        <div ng-repeat="x in cpCtrl.volunteers">
+        <div ng-repeat="x in cpCtrl.campaign.volunteers">
           <li><a href="#" ng-click="showDetails = ! showDetails">{{x.name}}: {{x.quantity}} </a>
             <p>{{cpCtrl.filterVolunteer(cpCtrl.contributors, x._id ) || 0}} signed up</p>
             <div ng-show="showDetails">

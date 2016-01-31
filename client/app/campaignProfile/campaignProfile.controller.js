@@ -1,6 +1,6 @@
 "use strict";
 
-(() => {
+(function () {
   class CampaignProfileController {
 
     constructor(
@@ -20,7 +20,7 @@
       this.stateParams = $stateParams;
       this.http = $http;
       this.api = apiCall;
-      //this.obj = apiCall.obj; 
+      //this.obj = apiCall.obj;
       this.geolocationFactory = geolocationFactory;
       this.generalFactory = generalFactory;
       this.donationFactory = donationFactory;
@@ -40,12 +40,11 @@
       this.getCampaignData();
     }
     calculateDonations(contributions) {
-      const donations = _.filter(contributions, (val) => val.type === 'Donation')
-        .map(a =>  a.amount).reduce((a, b) => a + b);
-      return donations;
+      return _.filter(contributions, (val) => val.type === 'Donation')
+        .map(a =>  a.amount).reduce((a, b) => a + b, 0);
     }
     updateDonatedAmount() {
-      const _this = this;
+      var _this = this;
       this.campaignFactory.updateDonations(_this.stateParams.id).then(data => {
           _this.donated = _this.calculateDonations(data.data);
       });
@@ -59,9 +58,9 @@
       this.campaignFactory.getCampaign(this.stateParams.id)
         .then(data => {
           _this.campaign = data.data;
-  
-          _this.api.linkApiCalls(_this.campaign._links.slice(1, 5));
-          console.log(data);
+
+          _this.api.linkApiCalls(_this.campaign._links.slice(1, 5), _this.campaign);
+          console.log(data.data);
           //_this.generalFactory.setCampaignId(data._id);
           //var amounts = _.pluck(_.filter(data.contributors, val => {return val.type === 'Donation'}), 'amount');
           //_this.donated = _this.calculateDonations(amounts);
@@ -71,53 +70,61 @@
         .then(data => {
           _this.updateDonatedAmount();
         })
-        .catch(data => console.error(`Error: ${data}`));
+        .catch(data => console.log(`Error: ${data}`));
     }
     addComment() {
       const _this = this;
       console.log('COMMENTSHOOOO  ', this.commentData);
       this.commentFactory.createComment(this.commentData, this.campaign._id)
         .success(data => {
-      console.log(data);
-          //this.api.linkApiCalls(this.campaign._links[1]);
-          this.commentData.text = '';
-          this.commentData.$setPristine();
+          this.api.linkApiCalls([this.campaign._links[1]], this.campaign);
+          this.commentData = {};
+          this.commentform.$setPristine();
         })
         .error(error => console.log(error.data));
     }
     addReply(parent) {
-      this.commentFactory(this.replyData, parent)
+      this.commentFactory.createReply(this.replyData, parent)
         .success(data => {
-          this.api.linkApiCalls(this.campaign._links[1]);
-          // this.replyData.text = '';
-          // this.replyData.parent = null;
-          this.form.$setPristine();
+          this.api.linkApiCalls([this.campaign._links[1]], this.campaign);
+          this.replyData= {};
+          this.replyForm.$setPristine();
         })
         .error(error => console.log(`Error:  ${error}`));
     }
+    // checkiffollowed() {
+    //   this.followingFactory.getMyFollowings()
+    //     .then(result => {
+    //       var _followedCampaigns = _.map(result.data, a => a.campaign_id._id);
+    //       if(_.contains(_followedCampaigns, _this.campaign._id)) {
+    //         _this.following = true;
+    //       }
+    //       return _.filter(contributions, (val) => val.type === 'Donation')
+    //     // .then(data => {
+    //     //   if (data) {
+    //     //     console.log('dataHOOEREEEE ', data)
+    //     //     _this.following = true; _this.followingid = data[0]._id }
+    //     //   else { _this.following = false; _this.followingid = null;}
+    //     })
+    //     .catch(error => { console.log(`Error: ${error}`);});
+    // }
     checkiffollowed() {
-      const _this = this;
+      var _this = this;
       this.followingFactory.getMyFollowings()
-        .then(result => { 
-          const _followedCampaigns = _.map(result.data, a => a.campaign_id._id);
-          if(_.contains(_followedCampaigns, _this.campaign._id)) {
-            _this.following = true;
-          }
-          return _.filter(contributions, (val) => val.type === 'Donation')
-        // .then(data => {
-        //   if (data) { 
-        //     console.log('dataHOOEREEEE ', data)
-        //     _this.following = true; _this.followingid = data[0]._id }
-        //   else { _this.following = false; _this.followingid = null;}
+        //.then(data => { console.log(_.filter(data, val => {return val.campaign_id === campaign })) })
+        .then(result => { return _.filter(result.data, val => {return val.campaign_id._id === _this.campaign._id }) })
+        .then(data => {
+          if (data) { _this.following = true; _this.followingid = data[0]._id }
+          else { _this.following = false; _this.followingid = null;}
         })
-        .catch(error => { console.log(`Error: ${error}`);});
+        .catch(error => { console.log(`Error: ${error}`) });
     }
     clicktofollow() {
-      const _this = this;
+      var _this = this;
       console.log(_this.followingid);
       if (this.following === false) {
         this.followingFactory.follow(_this.campaign._id)
-          .success(data => { 
+          .success(data => {
           console.log('clicktofollow  ', data);
             _this.followingid = data._id; _this.following = true;})
           .error(error => console.log(`Error: ${error}`));

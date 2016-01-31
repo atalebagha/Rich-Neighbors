@@ -6,10 +6,10 @@
       this.http = $http;
     }
 
-    linkApiCalls(array) {
+    linkApiCalls(array, object) {
       var _this = this;
       _.each(array, val => {
-        _this.http.get(val.href).success(data => _this[val.ref] = data);
+        _this.http.get(val.href).success(result => { console.log(result); object[val.ref] = result });
       });
     }
   }

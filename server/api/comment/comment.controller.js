@@ -118,10 +118,12 @@ exports.create = function(req, res) {
       console.log(data);
       if (data.parent) {
         return Comment.findByIdAndUpdate(data.parent,
-        {$push: {'replies': data._id}},
-        {safe: true, upsert: true, new: true})
+          {$push: {'replies': data._id}},
+          {safe: true, upsert: true, new: true})
       } else {
-        return data;
+        return Campaign.findByIdAndUpdate(data.campaign_id,
+          {$push: {'comments': data._id}},
+          {safe: true, upsert: true, new: true})
       }
     })
     .then(responseWithResult(res, 201))
