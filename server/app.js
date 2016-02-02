@@ -9,6 +9,8 @@ import mongoose from 'mongoose';
 import sqldb from './sqldb';
 import config from './config/environment';
 import http from 'http';
+const cluster = require('cluster');
+const numCPUs = require('os').cpus().length;
 
 // Connect to MongoDB
 mongoose.connect(config.mongo.uri, config.mongo.options);
@@ -26,11 +28,29 @@ var server = http.createServer(app);
 require('./config/express')(app);
 require('./routes')(app);
 
+
+
+
 // Start server
 function startServer() {
-  server.listen(config.port, config.ip, function() {
-    console.log('Express server listening on %d, in %s mode', config.port, app.get('env'));
-  });
+  if (cluster.isMaster) {
+  // Fork workers.
+    for (var i = 0; i < numCPUs; i++) {
+      cluster.fork();
+    }
+
+    cluster.on('exit', (worker, code, signal) => {
+      console.log(`worker ${worker.process.pid} died`);
+    });
+  } else {
+    // Workers can share any TCP connection
+    // In this case it is an HTTP server
+    server.listen(config.port, config.ip, function() {
+      console.log('Express server listening on %d, in %s mode', config.port, app.get('env'));
+    });
+  }
+
+
 }
 
 sqldb.sequelize.sync()

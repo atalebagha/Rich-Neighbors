@@ -50,15 +50,15 @@
             <span class="comment-date">{{ comment.created_at | date: 'medium' }}</span>
           </div>
           <div class="comment-actions">
-            <a ng-hide="level > 5 || rep[$index]" ng-click="rep[$index]=true">Reply</a>
-            <a ng-show="rep[$index]" ng-click="rep[$index]=false">Hide</a>
+            <a ng-hide="level > 5 || replies[$index]" ng-click="replies[$index]=true">Reply</a>
+            <a ng-show="replies[$index]" ng-click="replies[$index]=false">Hide</a>
           </div>
-          <div class="row" ng-show="rep[$index]">
-            <form class="comment-form form reply" name="cpCtrl.replyForm" ng-submit="addReply(comment._id)" novalidate ng-show="nav.isLoggedIn()">
+          <div class="row" ng-hide="replies[$index]">
+            <form class="comment-form form reply" name="cpCtrl.replyForm" ng-submit="cpCtrl.addReply(comment._id)" novalidate ng-show="nav.isLoggedIn()">
               <div class="comment-actions">
               </div>
               <div class="form-row">
-                <textarea class="input" ng-model='replyData.text'></textarea>
+                <textarea class="input" ng-model='cpCtrl.replyData.text'></textarea>
               </div>
               <div class="form-row">
                 <input type="submit" value="Add Reply">
@@ -87,11 +87,11 @@
             <a ng-show="rep[$index]" ng-click="rep[$index]=false">Hide</a>
           </div>
           <div class="row" ng-show="rep[$index]">
-            <form class="comment-form form reply" name="cpCtrl.replyForm" ng-submit="addReply(comment._id)" novalidate ng-show="nav.isLoggedIn()">
+            <form class="comment-form form reply" name="cpCtrl.replyForm[$index]" ng-submit="cpCtrl.addReply(comment._id)" novalidate ng-show="nav.isLoggedIn()">
               <div class="comment-actions">
               </div>
               <div class="form-row">
-                <textarea class="input" ng-model='replyData.text'></textarea>
+                <textarea class="input" ng-model='cpCtrl.replyData.text'></textarea>
               </div>
               <div class="form-row">
                 <input type="submit" value="Add Reply">
@@ -99,8 +99,8 @@
             </form>
           </div>
             </div>
-            <div ng-repeat="reply in replies = reply.replies | orderBy: 'created_at': true" ng-include="'comment.html'" ng-init="level = level + 1">
-            </div>
+           <!--  <div ng-repeat="reply in replies = reply.replies | orderBy: 'created_at': true" ng-include="'comment.html'" ng-init="level = level + 1">
+            </div> -->
           </div>
         </div>
 

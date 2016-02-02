@@ -88,7 +88,7 @@
         .success(data => {
           this.api.linkApiCalls([this.campaign._links[1]], this.campaign);
           this.replyData= {};
-          this.replyForm.$setPristine();
+          this.replyForm[$index].$setPristine();
         })
         .error(error => console.log(`Error:  ${error}`));
     }
