@@ -7,15 +7,7 @@
 import errors from './components/errors';
 import path from 'path';
 
-module.exports = function(app) {
-
-  // cors
-  // app.use(function(req, res, next) {
-  //   res.header("Access-Control-Allow-Origin", "*");
-  //   res.header("Access-Control-Allow-Methods","GET,POST,PUT,PATCH,DELETE")
-  //   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, X-XSRF-Token, Token, access_token");
-  //   next();
-  // });
+export default function (app) {
 
   // Insert routes below
   app.use('/api/images', require('./api/image'));
@@ -54,7 +46,7 @@ module.exports = function(app) {
 
   // All other routes should redirect to the index.html
   app.route('/*')
-    .get(function(req, res) {
+    .get((req, res) => {
       res.sendFile(path.resolve(app.get('appPath') + '/index.html'));
     });
 };

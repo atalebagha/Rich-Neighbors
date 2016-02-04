@@ -9,7 +9,7 @@ import mongoose from 'mongoose';
 import sqldb from './sqldb';
 import config from './config/environment';
 import http from 'http';
-const cluster = require('cluster');
+import cluster = require('cluster');
 const numCPUs = require('os').cpus().length;
 
 // Connect to MongoDB
@@ -28,9 +28,6 @@ var server = http.createServer(app);
 require('./config/express')(app);
 require('./routes')(app);
 
-
-
-
 // Start server
 function startServer() {
   if (cluster.isMaster) {
@@ -45,7 +42,7 @@ function startServer() {
   } else {
     // Workers can share any TCP connection
     // In this case it is an HTTP server
-    server.listen(config.port, config.ip, function() {
+    app.angularFullsack = server.listen(config.port, config.ip, function() {
       console.log('Express server listening on %d, in %s mode', config.port, app.get('env'));
     });
   }
@@ -53,11 +50,7 @@ function startServer() {
 
 }
 
-sqldb.sequelize.sync()
-  .then(startServer)
-  .catch(function(err) {
-    console.log('Server failed to start due to error: %s', err);
-  });
+setImmediate(startServer);
 
 // Expose app
 exports = module.exports = app;
