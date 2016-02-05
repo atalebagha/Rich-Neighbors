@@ -1,15 +1,15 @@
 /**
- * User model events
+ * Image model events
  */
 
 'use strict';
 
 import {EventEmitter} from 'events';
-import User from './user.model';
-var UserEvents = new EventEmitter();
+var Image = require('./image.model');
+var ImageEvents = new EventEmitter();
 
 // Set max event listeners (0 == unlimited)
-UserEvents.setMaxListeners(0);
+ImageEvents.setMaxListeners(0);
 
 // Model events
 var events = {
@@ -20,14 +20,14 @@ var events = {
 // Register the event emitter to the model events
 for (var e in events) {
   var event = events[e];
-  User.schema.post(e, emitEvent(event));
+  Image.schema.post(e, emitEvent(event));
 }
 
 function emitEvent(event) {
   return function(doc) {
-    UserEvents.emit(event + ':' + doc._id, doc);
-    UserEvents.emit(event, doc);
+    ImageEvents.emit(event + ':' + doc._id, doc);
+    ImageEvents.emit(event, doc);
   }
 }
 
-module.exports = UserEvents;
+export default ImageEvents;

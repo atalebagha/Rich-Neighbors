@@ -2,12 +2,16 @@
 
 import crypto from 'crypto';
 var mongoose = require('bluebird').promisifyAll(require('mongoose'));
-import {Schema} from 'mongoose';
-
-const authTypes = ['github', 'twitter', 'facebook', 'google'];
+var Schema = mongoose.Schema;
+var authTypes = ['github', 'twitter', 'facebook', 'google'];
 
 var UserSchema = new Schema({
   name: String,
+  profile_pic: {
+    type: String,
+  //  required: true,
+    default: 'https://pbs.twimg.com/media/BwsrTjGIcAAtjdu.png'  //TODO: Correct to basic png/jpg
+  },
   email: {
     type: String,
     lowercase: true
@@ -22,8 +26,44 @@ var UserSchema = new Schema({
   facebook: {},
   twitter: {},
   google: {},
-  github: {}
+  github: {},
+  campaigns: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Campaign'
+  }],
+  followers: [{
+    type:  Schema.Types.ObjectId,
+    ref: 'Follower',
+  }],
+  contributors: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Contributor'
+  }],
+  items: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Item'
+  }],
+  volunteers: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Volunteer'
+  }],
+  comments: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Comment'
+  }]
 });
+
+
+function linkify (data) {
+  return [{href: '/api/users/' + data._id, ref: 'self'},
+          {href: '/api/users/' + data._id + '/comments', ref: 'comments'},
+          {href: '/api/users/' + data._id + '/campaigns', ref: 'campaigns'},
+          {href: '/api/users/' + data._id + '/followers', ref: 'followings'},
+          {href: '/api/users/' + data._id + '/contributors', ref: 'contributions'},
+          {href: '/api/users/' + data._id + '/items', ref: 'items'},
+          {href: '/api/users/' + data._id + '/volunteers', ref: 'volunteering'}]
+}
+
 
 /**
  * Virtuals
@@ -35,7 +75,8 @@ UserSchema
   .get(function() {
     return {
       'name': this.name,
-      'role': this.role
+      'role': this.role,
+      'profile_pic': this.profile_pic
     };
   });
 
@@ -45,7 +86,8 @@ UserSchema
   .get(function() {
     return {
       '_id': this._id,
-      'role': this.role
+      'role': this.role,
+      'profile_pic': this.profile_pic
     };
   });
 
@@ -103,28 +145,30 @@ var validatePresenceOf = function(value) {
 UserSchema
   .pre('save', function(next) {
     // Handle new/update passwords
-    if (!this.isModified('password')) {
-      return next();
-    }
-
-    if (!validatePresenceOf(this.password) && authTypes.indexOf(this.provider) === -1) {
-      next(new Error('Invalid password'));
-    }
-
-    // Make salt with a callback
-    this.makeSalt((saltErr, salt) => {
-      if (saltErr) {
-        next(saltErr);
+    if (this.isModified('password')) {
+      if (!validatePresenceOf(this.password) && authTypes.indexOf(this.provider) === -1) {
+        next(new Error('Invalid password'));
       }
-      this.salt = salt;
-      this.encryptPassword(this.password, (encryptErr, hashedPassword) => {
-        if (encryptErr) {
-          next(encryptErr);
+
+      // Make salt with a callback
+      var _this = this;
+      this.makeSalt(function(saltErr, salt) {
+        if (saltErr) {
+          next(saltErr);
         }
-        this.password = hashedPassword;
-        next();
+        _this.salt = salt;
+        _this.encryptPassword(_this.password, function(encryptErr, hashedPassword) {
+          if (encryptErr) {
+            next(encryptErr);
+          }
+          _this.password = hashedPassword;
+          _this._links = linkify(_this);
+          next();
+        });
       });
-    });
+    } else {
+      next();
+    }
   });
 
 /**
@@ -139,19 +183,21 @@ UserSchema.methods = {
    * @return {Boolean}
    * @api public
    */
-  authenticate(password, callback) {
+  authenticate: function(password, callback) {
     if (!callback) {
       return this.password === this.encryptPassword(password);
     }
 
-    this.encryptPassword(password, (err, pwdGen) => {
+    var _this = this;
+    this.encryptPassword(password, function(err, pwdGen) {
       if (err) {
-        return callback(err);
+        callback(err);
       }
 
-      if (this.password === pwdGen) {
+      if (_this.password === pwdGen) {
         callback(null, true);
-      } else {
+      }
+      else {
         callback(null, false);
       }
     });
@@ -165,13 +211,14 @@ UserSchema.methods = {
    * @return {String}
    * @api public
    */
-  makeSalt(byteSize, callback) {
+  makeSalt: function(byteSize, callback) {
     var defaultByteSize = 16;
 
     if (typeof arguments[0] === 'function') {
       callback = arguments[0];
       byteSize = defaultByteSize;
-    } else if (typeof arguments[1] === 'function') {
+    }
+    else if (typeof arguments[1] === 'function') {
       callback = arguments[1];
     }
 
@@ -183,12 +230,11 @@ UserSchema.methods = {
       return crypto.randomBytes(byteSize).toString('base64');
     }
 
-    return crypto.randomBytes(byteSize, (err, salt) => {
+    return crypto.randomBytes(byteSize, function(err, salt) {
       if (err) {
         callback(err);
-      } else {
-        callback(null, salt.toString('base64'));
       }
+      return callback(null, salt.toString('base64'));
     });
   },
 
@@ -200,7 +246,7 @@ UserSchema.methods = {
    * @return {String}
    * @api public
    */
-  encryptPassword(password, callback) {
+  encryptPassword: function(password, callback) {
     if (!password || !this.salt) {
       return null;
     }
@@ -214,14 +260,13 @@ UserSchema.methods = {
                    .toString('base64');
     }
 
-    return crypto.pbkdf2(password, salt, defaultIterations, defaultKeyLength, (err, key) => {
+    return crypto.pbkdf2(password, salt, defaultIterations, defaultKeyLength, function(err, key) {
       if (err) {
         callback(err);
-      } else {
-        callback(null, key.toString('base64'));
       }
+      return callback(null, key.toString('base64'));
     });
   }
 };
 
-export default mongoose.model('User', UserSchema);
+module.exports = mongoose.model('User', UserSchema);

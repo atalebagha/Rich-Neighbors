@@ -6,9 +6,10 @@
 
 import express from 'express';
 import mongoose from 'mongoose';
-mongoose.Promise = require('bluebird');
 import config from './config/environment';
 import http from 'http';
+import cluster from 'cluster';
+const numCPUs = require('os').cpus().length;
 
 // Connect to MongoDB
 mongoose.connect(config.mongo.uri, config.mongo.options);
@@ -28,9 +29,24 @@ require('./routes')(app);
 
 // Start server
 function startServer() {
-  app.angularFullstack = server.listen(config.port, config.ip, function() {
-    console.log('Express server listening on %d, in %s mode', config.port, app.get('env'));
-  });
+  if (cluster.isMaster) {
+  // Fork workers.
+    for (var i = 0; i < numCPUs; i++) {
+      cluster.fork();
+    }
+
+    cluster.on('exit', (worker, code, signal) => {
+      console.log(`worker ${worker.process.pid} died`);
+    });
+  } else {
+    // Workers can share any TCP connection
+    // In this case it is an HTTP server
+    app.angularFullsack = server.listen(config.port, config.ip, function() {
+      console.log('Express server listening on %d, in %s mode', config.port, app.get('env'));
+    });
+  }
+
+
 }
 
 setImmediate(startServer);

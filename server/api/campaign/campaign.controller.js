@@ -1,0 +1,188 @@
+/**
+ * Using Rails-like standard naming convention for endpoints.
+ * GET     /api/campaigns              ->  index
+ * POST    /api/campaigns              ->  create
+ * GET     /api/campaigns/:id          ->  show
+ * PUT     /api/campaigns/:id          ->  update
+ * DELETE  /api/campaigns/:id          ->  destroy
+ */
+
+'use strict';
+
+var _ = require('lodash');
+var Campaign = require('./campaign.model');
+var config = require('../../config/environment');
+
+function handleError(res, statusCode) {
+  statusCode = statusCode || 500;
+  return function(err) {
+    res.status(statusCode).send(err);
+  };
+}
+
+function checkUserId(req, res) {
+  var userid = req.user._id
+  return function (entity) {
+    if (userid.equals(entity.user_id) ||
+      config.userRoles.indexOf(req.user.role) >=
+      config.userRoles.indexOf('admin')) {
+      return entity;
+    }
+    res.status(403).end();
+    return null;
+  }
+}
+
+function responseWithResult(res, statusCode) {
+  statusCode = statusCode || 200;
+  return function(entity) {
+    if (entity) {
+      res.status(statusCode).json(entity);
+    }
+  };
+}
+
+function respondParam(res, campaign) {
+  if (campaign) {
+    res.campaign = campaign;
+    return res.campaign;
+  }
+}
+
+function handleEntityNotFound(res) {
+  return function(entity) {
+    if (!entity) {
+      res.status(404).end();
+      return null;
+    }
+    return entity;
+  };
+}
+
+function saveUpdates(updates) {
+  return function(entity) {
+    var updated = _.merge(entity, updates);
+    return updated.saveAsync()
+      .spread(function(updated) {
+        return updated;
+      });
+  };
+}
+
+function removeEntity(res) {
+  return function(entity) {
+    if (entity) {
+      return entity.removeAsync()
+        .then(() => {
+          res.status(204).end()
+        });
+    }
+  };
+}
+
+
+// Gets a list of Campaigns
+// exports.index = function(req, res) {
+//   console.log("This was called", req);
+//   Campaign.findAsync({user_id: req.user_id})
+//     .then(responseWithResult(res))
+//     .catch(handleError(res));
+// };
+
+exports.index = function(req, res) {
+  if (req.baseUrl === '/api/users/me/campaigns') {
+    Campaign.find({
+        user_id: req.user_id
+      })
+      .execAsync()
+      .then(responseWithResult(res))
+      .catch(handleError(res));
+  } else {
+    var limit = req.query.limit || 9;
+    var offset = req.query.offset || 0;
+    // get the max distance/radius or set it to 100 miles
+    var maxDistance = req.query.distance || 100;
+    // convert miles to latitude/longitute radius
+    maxDistance /= 69;
+    // get coordinates [ <longitude> , <latitude> ]
+    var data;
+    var coords = [];
+    coords[0] = req.query.longitude || 0;
+    coords[1] = req.query.latitude || 0;
+    if (coords[0] === 0 && coords[1] === 0) {
+      data = {};
+    } else {
+      data = req.params !== {} ? req.params : {
+        loc: {
+          $geoWithin: {
+            $center: [coords, maxDistance ]
+          }
+        }
+      };
+
+    }
+    Campaign.find(data)
+      .skip(offset)
+      .limit(limit)
+      .execAsync()
+      .then(responseWithResult(res))
+      .catch(handleError(res));
+  }
+};
+
+// Gets a single Campaign from the DB
+exports.show = function(req, res) {
+  Campaign.findById(req.params.id)
+    .populate('user_id', 'name')
+    .populate('volunteers','name')
+    .execAsync()
+    .then(handleEntityNotFound(res))
+    .then(responseWithResult(res))
+    .catch(handleError(res));
+
+};
+
+// pass a single campaign as a param
+exports.showParam = function(req, res, next) {
+  Campaign.findByIdAsync(req.params.id)
+    .then(handleEntityNotFound(res))
+    .then(function () {
+      next()
+    })
+    .catch(handleError(res));
+};
+
+
+
+// Creates a new Campaign in the DB
+exports.create = function(req, res) {
+  var data = _.extend(req.body, req.params, {
+    user_id: req.user._id
+  });
+  console.log(data);
+  Campaign.createAsync(data)
+    .then(responseWithResult(res, 201))
+    .catch(handleError(res));
+};
+
+// Updates an existing Campaign in the DB
+exports.update = function(req, res) {
+  if (req.body._id) {
+    delete req.body._id;
+  }
+  Campaign.findByIdAsync(req.params.id)
+    .then(handleEntityNotFound(res))
+    .then(checkUserId(req, res))
+    .then(saveUpdates(req.body))
+    .then(responseWithResult(res))
+    .catch(handleError(res));
+};
+
+// Deletes a Campaign from the DB
+exports.destroy = function(req, res) {
+  Campaign.findByIdAsync(req.params.id)
+    .then(handleEntityNotFound(res))
+    .then(checkUserId(req, res))
+    .then(removeEntity(res))
+    .catch(handleError(res));
+};

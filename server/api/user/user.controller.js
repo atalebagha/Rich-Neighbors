@@ -19,77 +19,104 @@ function handleError(res, statusCode) {
   };
 }
 
+function respondWith(res, statusCode) {
+  statusCode = statusCode || 200;
+  return function() {
+    res.status(statusCode).end();
+  };
+}
+
 /**
  * Get list of users
  * restriction: 'admin'
  */
-export function index(req, res) {
+exports.index = function(req, res) {
   User.findAsync({}, '-salt -password')
-    .then(users => {
+    .then(function(users) {
       res.status(200).json(users);
     })
     .catch(handleError(res));
-}
+};
 
 /**
  * Creates a new user
  */
-export function create(req, res, next) {
+exports.create = function(req, res, next) {
   var newUser = new User(req.body);
   newUser.provider = 'local';
   newUser.role = 'user';
   newUser.saveAsync()
     .spread(function(user) {
-      var token = jwt.sign({ _id: user._id }, config.secrets.session, {
-        expiresIn: 60 * 60 * 5
+      var token = jwt.sign({
+        _id: user._id
+      }, config.secrets.session, {
+        expiresInMinutes: 60 * 5
       });
-      res.json({ token });
+      res.json({
+        token: token
+      });
     })
     .catch(validationError(res));
-}
+};
 
 /**
  * Get a single user
  */
-export function show(req, res, next) {
+exports.show = function(req, res, next) {
   var userId = req.params.id;
 
   User.findByIdAsync(userId)
-    .then(user => {
+    .then(function(user) {
       if (!user) {
         return res.status(404).end();
       }
       res.json(user.profile);
     })
-    .catch(err => next(err));
-}
+    .catch(function(err) {
+      return next(err);
+    });
+};
+
+// pass a single campaign as a param
+exports.showParam = function(req, res, next) {
+  User.findByIdAsync(req.params.id)
+    .then(function(user) {
+      if (!user) {
+        return res.status(404).end();
+      }})
+    .then(function () {
+      next()
+    })
+    .catch(handleError(res));
+};
+
 
 /**
  * Deletes a user
  * restriction: 'admin'
  */
-export function destroy(req, res) {
+exports.destroy = function(req, res) {
   User.findByIdAndRemoveAsync(req.params.id)
     .then(function() {
       res.status(204).end();
     })
     .catch(handleError(res));
-}
+};
 
 /**
  * Change a users password
  */
-export function changePassword(req, res, next) {
+exports.changePassword = function(req, res, next) {
   var userId = req.user._id;
   var oldPass = String(req.body.oldPassword);
   var newPass = String(req.body.newPassword);
 
   User.findByIdAsync(userId)
-    .then(user => {
+    .then(function(user) {
       if (user.authenticate(oldPass)) {
         user.password = newPass;
         return user.saveAsync()
-          .then(() => {
+          .then(function() {
             res.status(204).end();
           })
           .catch(validationError(res));
@@ -97,27 +124,62 @@ export function changePassword(req, res, next) {
         return res.status(403).end();
       }
     });
-}
+};
+
+
+/**
+ * Upload profile picture
+ */
+exports.changeProfilePic = function(req, res, next) {
+  var userId = req.user._id;
+  //var oldPass = String(req.body.oldPassword);
+  var newProfilePic = String(req.body.newProfilePic);
+
+  User.findByIdAsync(userId)
+    .then(function(user) {
+      user.profile_pic = newProfilePic;
+      return user.saveAsync()
+        .then(function() {
+          res.status(204).end();
+        })
+        .catch(validationError(res));
+
+    });
+};
+
 
 /**
  * Get my info
  */
-export function me(req, res, next) {
+exports.me = function(req, res, next) {
   var userId = req.user._id;
 
-  User.findOneAsync({ _id: userId }, '-salt -password')
-    .then(user => { // don't ever give out the password or salt
+  User.findOneAsync({
+      _id: userId
+    }, '-salt -password')
+    .then(function(user) { // don't ever give out the password or salt
       if (!user) {
         return res.status(401).end();
       }
       res.json(user);
     })
-    .catch(err => next(err));
-}
+    .catch(function(err) {
+      return next(err);
+    });
+};
+
+
+
+
+exports.meParams = function(req, res, next) {
+  req.user_id = req.user._id;
+  next();
+};
+
 
 /**
  * Authentication callback
  */
-export function authCallback(req, res, next) {
+exports.authCallback = function(req, res, next) {
   res.redirect('/');
-}
+};

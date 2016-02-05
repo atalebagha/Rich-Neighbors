@@ -12,10 +12,10 @@ var userCtrlStub = {
 };
 
 var authServiceStub = {
-  isAuthenticated() {
+  isAuthenticated: function() {
     return 'authService.isAuthenticated';
   },
-  hasRole(role) {
+  hasRole: function(role) {
     return 'authService.hasRole.' + role;
   }
 };
@@ -30,7 +30,7 @@ var routerStub = {
 // require the index with our stubbed out modules
 var userIndex = proxyquire('./index', {
   'express': {
-    Router() {
+    Router: function() {
       return routerStub;
     }
   },
