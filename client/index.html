@@ -14,6 +14,8 @@
     <!-- build:css(client) app/vendor.css -->
       <!-- bower:css -->
       <link rel="stylesheet" href="bower_components/bootstrap-social/bootstrap-social.css" />
+      <link rel="stylesheet" href="bower_components/foundation-icon-fonts/foundation-icons.css" />
+      <link rel="stylesheet" href="bower_components/textAngular/dist/textAngular.css" />
       <!-- endbower -->
     <!-- endbuild -->
     <!-- build:css({.tmp,client}) app/app.css -->
@@ -57,6 +59,19 @@
       <script src="bower_components/lodash/dist/lodash.compat.js"></script>
       <script src="bower_components/angular-ui-router/release/angular-ui-router.js"></script>
       <script src="bower_components/angular-validation-match/dist/angular-validation-match.min.js"></script>
+      <script src="bower_components/react/react.js"></script>
+      <script src="bower_components/react/react-dom.js"></script>
+      <script src="bower_components/what-input/what-input.js"></script>
+      <script src="bower_components/foundation-sites/dist/foundation.js"></script>
+      <script src="bower_components/rangy/rangy-core.js"></script>
+      <script src="bower_components/rangy/rangy-classapplier.js"></script>
+      <script src="bower_components/rangy/rangy-highlighter.js"></script>
+      <script src="bower_components/rangy/rangy-selectionsaverestore.js"></script>
+      <script src="bower_components/rangy/rangy-serializer.js"></script>
+      <script src="bower_components/rangy/rangy-textrange.js"></script>
+      <script src="bower_components/textAngular/dist/textAngular.js"></script>
+      <script src="bower_components/textAngular/dist/textAngular-sanitize.js"></script>
+      <script src="bower_components/textAngular/dist/textAngularSetup.js"></script>
       <!-- endbower -->
     <!-- endbuild -->
     <!-- build:js(.tmp) app/app.js -->
@@ -72,8 +87,16 @@
       <script src="app/admin/admin.controller.js"></script>
       <script src="app/admin/admin.router.js"></script>
       <script src="app/app.constant.js"></script>
+      <script src="app/campaign/campaign.service.js"></script>
+      <script src="app/comment/comment.service.js"></script>
+      <script src="app/contribute/contribute.service.js"></script>
+      <script src="app/following/following.service.js"></script>
+      <script src="app/geolocation/geolocation.service.js"></script>
       <script src="app/main/main.controller.js"></script>
       <script src="app/main/main.js"></script>
+      <script src="app/payment/payment.service.js"></script>
+      <script src="app/supply/supply.service.js"></script>
+      <script src="app/volunteer/volunteer.service.js"></script>
       <script src="components/auth/auth.service.js"></script>
       <script src="components/auth/interceptor.service.js"></script>
       <script src="components/auth/router.decorator.js"></script>
@@ -87,5 +110,6 @@
       <script src="components/util/util.service.js"></script>
       <!-- endinjector -->
     <!-- endbuild -->
+      <script>$(document).foundation();</script>
   </body>
 </html>
