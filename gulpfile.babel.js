@@ -15,9 +15,45 @@ import {Server as KarmaServer} from 'karma';
 import runSequence from 'run-sequence';
 import {protractor, webdriver_update} from 'gulp-protractor';
 import {Instrumenter} from 'isparta';
+require('gulp-grunt')(gulp, buildcontrol);
 
 var plugins = gulpLoadPlugins();
 var config;
+var buildcontrol = {
+    buildcontrol: {
+        options: {
+            dir: `${paths.dist}`,
+            commit: true,
+            push: true,
+            force: true,
+            connectCommits: false,
+            message: 'Built %sourceName% from commit %sourceCommit% on branch %sourceBranch%'
+        },
+        production: {
+            options: {
+                remote: 'git@heroku.com:richneighbors.git',
+                branch: 'master',
+                remoteBranch: 'master'
+            }
+        },
+        staging: {
+            options: {
+                remote: 'git@heroku.com:richneighbors-dev.git',
+                branch: 'develop',
+                remoteBranch: 'master',
+                connectCommits: false,
+            }
+
+        },
+        openshift: {
+            options: {
+                remote: 'openshift',
+                branch: 'master'
+            }
+        }
+
+    }
+};
 
 const clientPath = require('./bower.json').appPath || 'client';
 const serverPath = 'server';
@@ -29,7 +65,7 @@ const paths = {
             `${clientPath}/**/!(*.spec|*.mock).js`,
             `!${clientPath}/bower_components/**/*`
         ],
-        styles: [`${clientPath}/{app,components}/**/*.scss`],
+        styles: [`${clientPath}/{app,components}/**/**/*.scss`],
         mainStyle: `${clientPath}/app/app.scss`,
         views: `${clientPath}/{app,components}/**/*.html`,
         mainView: `${clientPath}/index.html`,
@@ -595,3 +631,6 @@ gulp.task('test:e2e', ['env:all', 'env:test', 'start:server', 'webdriver_update'
             process.exit();
         });
 });
+
+gulp.task('buildcontrol' [
+    'grunt-build-control']);
