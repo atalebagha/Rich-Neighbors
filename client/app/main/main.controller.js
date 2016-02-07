@@ -9,9 +9,13 @@ class MainController {
     this.campaign = campaign;
     this.offset = 1;
     this.geolocation.getIpInfo()
-      .then(data => this.currentLoc = `${data.city}, ${data.region} ${data.postal}`);
+      .then(data => this.currentLoc = `${data.city}, ${data.region} ${data.postal}`)
+    //this.getLocation()
     this.geolocation.getCurrentPosition()
-      .then(data => { this.loc = [data.coords.longitude, data.coords.latitude] });
+      .then(data => this.position = data.coords)
+      .then(data => console.log(this.position))
+      .then(data => this.geolocation.getAddress(Math.round(this.position.latitude*1000000)/1000000, Math.round(this.position.longitude*1000000)/1000000))
+      .then(data => console.log(data));
       //.then(data => this.loc = data)
       //.then(() => this.getCampaignResults());
 
@@ -31,6 +35,13 @@ class MainController {
         self.offset += 1;
       })
       .error( err => console.error(`Error: ${err}`));
+  }
+  getLocation() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(position){
+        this.position = position;
+      });
+    }
   }
 
   sortCampaignsBy(type) {
