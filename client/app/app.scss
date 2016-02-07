@@ -1,12 +1,19 @@
-$icon-font-path: "../bower_components/bootstrap-sass-official/vendor/assets/fonts/bootstrap/";
-@import '../bower_components/bootstrap-sass-official/vendor/assets/stylesheets/bootstrap';
-@import '../bower_components/bootstrap-social/bootstrap-social.scss';
+$icon-font-path: "../bower_components/foundation-icon-fonts/";
+@import '../bower_components/foundation-sites/scss/foundation.scss';
+@include foundation-everything;
+// $icon-font-path: "../bower_components/bootstrap-sass-official/vendor/assets/fonts/bootstrap/";
+// @import '../bower_components/bootstrap-sass-official/vendor/assets/stylesheets/bootstrap';
+// @import '../bower_components/bootstrap-social/bootstrap-social.scss';
 $fa-font-path: "../bower_components/font-awesome/fonts";
 @import '../bower_components/font-awesome/scss/font-awesome';
+
+
 
 /**
  * App-wide Styles
  */
+
+
 
 .browserupgrade {
   margin: 0.2em 0;
@@ -17,6 +24,7 @@ $fa-font-path: "../bower_components/font-awesome/fonts";
 
 // Component styles are injected through grunt
 // injector
+@import 'account/login/login';
 @import 'admin/admin';
 @import 'main/main';
 @import '../components/footer/footer';
