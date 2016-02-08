@@ -15,7 +15,7 @@ class MainController {
     this.geolocation.getCurrentPosition()
       .then(data => this.position = data.coords)
       .then(data => this.geolocation.getAddress(Math.round(this.position.latitude*1000000)/1000000, Math.round(this.position.longitude*1000000)/1000000))
-      .then(data => this.location = data.results.);
+      .then(data => console.log(data.results));
 
   }
 
